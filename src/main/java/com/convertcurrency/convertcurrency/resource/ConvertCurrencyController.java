@@ -1,6 +1,8 @@
 package com.convertcurrency.convertcurrency.resource;
 
 import com.convertcurrency.convertcurrency.model.ConvertedCurrency;
+import com.convertcurrency.convertcurrency.proxy.CurrencyConversionProxy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +14,8 @@ import java.util.HashMap;
 
 @RestController
 public class ConvertCurrencyController {
+
+    @Autowired private CurrencyConversionProxy currencyConversionProxy;
 
     @GetMapping("/convert-currency/from/{fromCurrency}/to/{toCurrency}/quantity/{quantity}")
     public ConvertedCurrency getConvertedCurrency(@PathVariable String fromCurrency, @PathVariable String toCurrency, @PathVariable BigDecimal quantity) {
@@ -29,6 +33,17 @@ public class ConvertCurrencyController {
                 convertedCurrency.getConversionMultiple(),
                 quantity.multiply(convertedCurrency.getConversionMultiple()),
                 convertedCurrency.getEnvironment());
+    }
+
+    @GetMapping("/convert-currency-feign/from/{fromCurrency}/to/{toCurrency}/quantity/{quantity}")
+    public ConvertedCurrency getConvertedCurrencyFeign
+            (@PathVariable String fromCurrency, @PathVariable String toCurrency, @PathVariable BigDecimal quantity) {
+        ConvertedCurrency convertedCurrency = currencyConversionProxy.retrieveExchangeValue(fromCurrency, toCurrency);
+        return new ConvertedCurrency(convertedCurrency.getId(),
+                fromCurrency, toCurrency, quantity,
+                convertedCurrency.getConversionMultiple(),
+                quantity.multiply(convertedCurrency.getConversionMultiple()),
+                convertedCurrency.getEnvironment() + " " + "feign");
     }
 
 }
